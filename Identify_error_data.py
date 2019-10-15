@@ -4,29 +4,43 @@ from datetime import datetime
 from typing import List, Tuple
 
 def check_file_data(file_path: str) -> List[Tuple[datetime, float, str]]:
-    date_data = collections.deque(maxlen=28)
-    value_data = collections.deque(maxlen=28)
+    outlier_check_period = 5
+    date_data = collections.deque(maxlen=outlier_check_period)
+    value_data = collections.deque(maxlen=outlier_check_period)
     missing_values = []
     stale_values = []
     outliers = []
-    outlier_check_period = 28
     with open (file_path) as raw_data:
         reader = csv.reader(raw_data)
         next(reader)    #skip the header
         for count, row in enumerate(reader):
-            missing_values = check_for_missing_value(date_data, value_data, row, missing_values)
-            stale_values = check_for_stale_value(date_data, value_data, row, stale_values)
+            date_data.append(row[0])
+            value_data.append(row[1])
+            missing_values = check_for_missing_value(date_data, value_data, missing_values)
+            stale_values = check_for_stale_value(date_data, value_data, stale_values)
             if count % outlier_check_period == 0:
-                outliers = check_for_outliers(date_data, value_data, row, outliers)
-    return ['temporary output']
+                outliers = check_for_outliers(date_data, value_data, outliers)
+    return stale_values
 
-def check_for_missing_value(date_data, value_data, row, missing_values):
-    return []
+def check_for_missing_value(date_data, value_data, missing_values):
+    if value_data[-1] == "":
+        missing_values.append((date_data.pop(), value_data.pop(), 'missing value'))
+    return missing_values
 
-def check_for_stale_value(date_data, value_data, row, stale_values):
-    return []
+def check_for_stale_value(date_data, value_data, stale_values):
+    week_days = 7
+    format_str = '%d/%m/%Y' # The format
+    for counter in range(len(value_data)-1, -1, -1):
+        if value_data[counter] != value_data[-1] or counter == 0:
+            if (datetime.strptime(date_data[counter], format_str) - datetime.strptime(date_data[-1], format_str)).days >= week_days:
+                stale_values.append((date_data.pop(), float(value_data.pop()), 'stale value'))
+            break
+    return stale_values
 
-def check_for_outliers(date_data, value_data, row, outliers):
+
+
+
+def check_for_outliers(date_data, value_data, outliers):
     return []
     
 def main(path_to_csv_file: str):
