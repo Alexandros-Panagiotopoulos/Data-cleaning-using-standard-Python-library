@@ -24,7 +24,7 @@ def check_file_data(file_path: str) -> List[Tuple[datetime.date, float, str]]:
         outliers = check_for_outliers(date_data, value_data, outliers)
     return missing_values  + stale_values + outliers
 
-def add_row_to_deques(date_data, value_data, row):
+def add_row_to_deques(date_data:list, value_data:list, row:tuple):
     format_str = '%d/%m/%Y'
     date_data.append(datetime.date(datetime.strptime(row[0], format_str))) #converts the date string into datetime.date type
     if row[1]:
@@ -37,12 +37,12 @@ def move_error_data(error_list:list, date_data:list, value_data:list, message:st
     del date_data[position]
     del value_data[position]
 
-def check_for_missing_value(date_data, value_data, missing_values):
+def check_for_missing_value(date_data:list, value_data:list, missing_values:list):
     if value_data[-1] == None:
         move_error_data(missing_values, date_data, value_data, 'missing value')
     return missing_values
 
-def check_for_stale_value(date_data, value_data, stale_values):
+def check_for_stale_value(date_data:list, value_data:list, stale_values:list):
     week_days = 7
     for counter in range(len(value_data)-1, -1, -1):
         if value_data[counter] == value_data[-1]:
@@ -52,7 +52,7 @@ def check_for_stale_value(date_data, value_data, stale_values):
             break
     return stale_values
 
-def check_for_outliers(date_data, value_data, outliers):
+def check_for_outliers(date_data:list, value_data:list, outliers:list):
     """ Finds the outliers based on the normal distribution principle that 99%
      of the values are within range of 2.6 standard deviations from the mean value"""
     no_of_standard_deviations_acceptale = 2.6
@@ -71,7 +71,7 @@ def check_for_outliers(date_data, value_data, outliers):
                 break
     return outliers
 
-def find_acceptable_value_range(date_data, value_data, no_of_standard_deviations_acceptale):
+def find_acceptable_value_range(date_data:list, value_data:list, no_of_standard_deviations_acceptale:float):
     value_data_std = statistics.pstdev(value_data)
     value_data_mean = statistics.mean(value_data)
     outlier_cut_off = value_data_std * no_of_standard_deviations_acceptale
